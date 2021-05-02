@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Roboto', sans-serif;
+}
+
+:root {
+  --color-cyan: rgb(69, 142, 202);
+  --color-blue: #0063b2ff;
+  --color-lightBlue: #9cc3d5ff;
+  --color-grey: #919191;
+  --color-veryLightGrey: #f8f8f8;
+  --color-lightGrey: #ededed;
+  --color-darkGrey: #4a4a4a;
+
+  --color-black: #222;
+  --color-white: #fff;
+
+  --border-light: 1px solid #00000010;
+}
+
+body {
+  min-height: 100vh;
+  background-image: linear-gradient(
+    to bottom,
+    var(--color-blue) 0%,
+    var(--color-blue) 25%,
+    var(--color-white) 25%,
+    var(--color-white) 100%
+  );
+  overflow: hidden;
+  font-size: 1.2rem;
+  color: var(--color-darkGrey);
+}
+
+@mixin respond($breakpoint) {
+  // $breakpoint is simply a variable that can have several values
+
+  @if $breakpoint==tab-land {
+    // here `laptop` is the value of $breakpoint
+    // when call laptop, we mean the following piece of code
+
+    @media only screen and (max-width: 1200px) {
+      @content;
+    }
+  }
+
+  @if $breakpoint==tab-port {
+    @media only screen and (max-width: 900px) {
+      @content;
+    }
+  }
+
+  @if $breakpoint==mobile {
+    @media only screen and (max-width: 600px) {
+      @content;
+    }
+  }
+}
+
+.header-secondary {
+  font-size: 1.4rem;
+  font-weight: 300;
+  color: var(--color-darkGrey);
+}
+
+.u-shadded-text {
+  color: var(--color-grey);
+}
+
+.u-vSmall-text {
+  font-size: 0.8rem;
+}
+
+.u-small-text {
+  font-size: 1rem;
+}

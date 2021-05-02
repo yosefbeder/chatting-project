@@ -1,0 +1,95 @@
+.avatar {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+
+  &.big {
+    width: 3.2rem;
+    height: 3.2rem;
+  }
+}
+
+.chat {
+  display: flex;
+  padding-top: 0.6rem;
+  padding-left: 0.6rem;
+  gap: 0.6rem;
+  cursor: pointer;
+
+  &__content {
+    flex: 1;
+    display: inherit;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: var(--border-light);
+    padding: 0.6rem 0;
+    padding-right: 0.5rem;
+  }
+
+  &__info {
+    display: inherit;
+    flex-direction: column;
+
+    &:nth-child(2) {
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+
+  &__unread {
+    color: var(--color-white);
+    background-color: var(--color-cyan);
+    padding: 0 0.5rem;
+    border-radius: 1rem;
+  }
+
+  &:hover {
+    background-color: var(--color-veryLightGrey);
+  }
+
+  &.active {
+    background-color: var(--color-lightGrey);
+  }
+}
+
+.message {
+  &__content {
+    background-color: var(--color-veryLightGrey);
+    width: max-content;
+    max-width: 20rem;
+    padding: 0.5rem;
+    border-radius: 1rem;
+    position: relative;
+  }
+
+  &.you &__content {
+    margin-left: auto;
+    background-color: var(--color-lightBlue);
+  }
+
+  &__date {
+    position: absolute;
+    top: -1rem;
+  }
+}
+
+.dropdown__group {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown {
+  width: max-content;
+  background-color: var(--color-grey);
+  position: absolute;
+  z-index: 10;
+  border-radius: 1rem;
+
+  span {
+    color: var(--color-white);
+  }
+
+  &.align-right {
+    right: 0;
+  }
+}
