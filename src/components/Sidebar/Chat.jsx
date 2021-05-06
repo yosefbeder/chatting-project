@@ -13,7 +13,10 @@ export default function Chat({
   const firstName = name.split(' ')[0];
   const mLastMessage =
     lastMessage.length < 25 ? lastMessage : `${lastMessage.slice(0, 22)}...`;
-  const mLastActive = Intl.DateTimeFormat('en-us').format(new Date(lastActive));
+  const mLastActive =
+    lastActive !== 'none'
+      ? Intl.DateTimeFormat('en-us').format(new Date(lastActive))
+      : 'none';
 
   return (
     <div

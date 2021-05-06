@@ -77,3 +77,19 @@ body {
 .u-small-text {
   font-size: 1rem;
 }
+
+html {
+  font-size: 100%;
+
+  @include respond(tab-land) {
+    font-size: 95%;
+  }
+
+  @include respond(tab-port) {
+    font-size: 90%;
+  }
+
+  @include respond(mobile) {
+    font-size: 80%;
+  }
+}

@@ -1,11 +1,12 @@
 import React from 'react';
 import Button from '@material-ui/core/Button';
 import { FcGoogle as Google } from 'react-icons/fc';
-import { IoLogoWhatsapp as Logo } from 'react-icons/io';
+import { SiGooglehangoutschat as Logo } from 'react-icons/si';
+import Paper from '@material-ui/core/Paper';
 
 export default function Login({ onSignIn }) {
   return (
-    <div className="login">
+    <Paper elevation={5} className="login">
       <Logo className="login__logo" />
 
       <p>
@@ -20,6 +21,6 @@ export default function Login({ onSignIn }) {
       >
         Sign In with google
       </Button>
-    </div>
+    </Paper>
   );
 }

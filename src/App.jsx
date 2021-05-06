@@ -1,126 +1,275 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Sidebar from './components/Sidebar/Sidebar';
 import Main from './components/Chatting/Main';
 import { db, auth, provider } from './firebase';
 import Login from './components/Login/Login';
 import Context from './store/context';
 import { v4 as uuid } from 'uuid';
+import Paper from '@material-ui/core/Paper';
+const parseEmail = email => {
+  const emailArr = email.split('');
+  const i = email.lastIndexOf('@');
+  return emailArr.slice(0, i).join('');
+};
 
 export default function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState();
   const [chatsEmails, setChatsEmails] = useState([]);
+  const [chats, setChats] = useState([]);
+  const [userMessages, setUserMessages] = useState({});
   const [activeChat, setActiveChat] = useState('');
+  const [value, setValue] = useState(0);
 
-  useEffect(() => {
-    if (user) {
-      db.ref(`/users/${parseEmail(user.email)}/chats/`).once(
-        'value',
-        snapshot => {
-          if (snapshot.val()) {
-            const snapshotArr = Object.keys(snapshot.val()).map(
-              email => `${email}@gmail.com`,
-            );
-
-            setChatsEmails(snapshotArr);
-            setActiveChat(snapshotArr[0]);
-          }
-        },
-      );
-    }
-  }, [user]);
-
-  const parseEmail = email => {
-    const emailArr = email.split('');
-    return emailArr.slice(0, emailArr.lastIndexOf('@')).join('');
-  };
+  /*
+  - sign in
+  - send user data to the database if user is new
+  */
 
   const signIn = async () => {
-    // getting the data that I'll need from user object
+    //sign in
+
+    const data = await auth.signInWithPopup(provider);
     const {
-      additionalUserInfo: {
-        isNewUser,
-        profile: { email, name, picture: thumbnail },
-      },
-    } = await auth.signInWithPopup(provider);
+      isNewUser,
+      profile: { email, name, picture: thumbnail },
+    } = data.additionalUserInfo;
+    setUser({ email, name, thumbnail });
 
-    const info = { email, name, thumbnail };
+    // sending data to the database
 
-    // adding the user to the database
     if (isNewUser) {
-      db.ref(`users/${parseEmail(email)}/info`).set(info);
+      db.ref(`/users/${parseEmail(email)}/info`).set({
+        email,
+        name,
+        thumbnail,
+      });
+    }
+  };
+
+  /*
+  - get chatsEmails and update it whenever something is changed in the database
+  - get messages and update it whenever something is chnaged in the database
+  */
+
+  useEffect(() => {
+    // getting chatsEmails and messages and adding an event listener to update them
+
+    if (user) {
+      db.ref(`/users/${parseEmail(user.email)}/chats`).on('value', snapshot => {
+        if (snapshot.val()) {
+          const emails = Object.keys(snapshot.val()).map(
+            email => `${email}@gmail.com`,
+          );
+
+          if (!emails.includes(activeChat)) {
+            setActiveChat('');
+          }
+
+          if (JSON.stringify(chatsEmails) !== JSON.stringify(emails)) {
+            setChatsEmails(emails);
+          }
+
+          setUserMessages(() => {
+            const messagesObj = snapshot.val();
+            Object.keys(messagesObj).map(key => {
+              if (!messagesObj[key].messages) {
+                messagesObj[key].messages = [];
+              }
+              return messagesObj;
+            });
+            return messagesObj;
+          });
+        } else {
+          setActiveChat('');
+          setChatsEmails([]);
+        }
+      });
     }
 
-    // updating the state
-    setUser(info);
-  };
+    return () => {
+      if (user) {
+        db.ref(`/users/${parseEmail(user.email)}/chats`).off();
+      }
+    };
+  }, [user, activeChat, chatsEmails]);
+
+  // TODO: removing database relationship after unmouting
+
+  // get chats and update it
+
+  useEffect(() => {
+    (async () => {
+      if (chatsEmails.length === 0) setChats([]);
+      else {
+        const newChats = await Promise.all(
+          chatsEmails.map(async chatEmail => {
+            let info;
+            await db
+              .ref(`users/${parseEmail(chatEmail)}/info`)
+              .once('value', snapshot => {
+                info = snapshot.val();
+              });
+            return info;
+          }),
+        );
+
+        setChats(newChats);
+      }
+    })();
+  }, [chatsEmails]);
+
+  // Profile Functions:
 
   const signOut = () => {
     auth.signOut();
     setUser(null);
-    setActiveChat(null);
+    setChats([]);
+    setUserMessages([]);
     setChatsEmails([]);
+    setActiveChat('');
   };
 
-  const addChat = () => {
-    // getting the email
-    const email = prompt('Enter the Email Address');
+  const addChat = async email => {
+    try {
+      if (email === user.email) throw new Error('This is you!');
+      if (chatsEmails.includes(email))
+        throw new Error('User is existed already');
+      let isExisted;
+      await db
+        .ref(`/users/${parseEmail(email)}/info`)
+        .once('value', snapshot => {
+          if (!snapshot.val()) isExisted = false;
+          if (snapshot.val()) isExisted = true;
+        });
+      if (!isExisted) throw new Error("This user isn't even using or app");
+      if (isExisted) {
+        const updates = {};
 
-    // check if the user exists
-    if (email) {
-      db.ref(`/users/${parseEmail(email)}/info`).once('value', snapshot => {
-        if (!snapshot.val()) {
-          alert("This user isn't existed");
-        } else if (email === user.email) {
-          alert('This is you!');
-        } else if (chatsEmails.includes(email)) {
-          alert('User is already existed');
-        } else {
-          // adding the chat to the state
-          const copy = [...chatsEmails];
-          copy.push(email);
-          setChatsEmails(copy);
+        updates[
+          `/users/${parseEmail(user.email)}/chats/${parseEmail(email)}`
+        ] = { isExisted, messages: [] };
+        updates[
+          `/users/${parseEmail(email)}/chats/${parseEmail(user.email)}`
+        ] = {
+          isExisted,
+          messages: [],
+        };
 
-          // adding the chat to the backend with a message
-
-          const updates = {};
-          const fMId = uuid();
-
-          updates[
-            `users/${parseEmail(user.email)}/chats/${parseEmail(email)}/${fMId}`
-          ] = {
-            provider: user.email,
-            content: 'Hey I want to be your friend 😎😎😎',
-            date: new Date().toISOString(),
-          };
-
-          updates[
-            `users/${parseEmail(email)}/chats/${parseEmail(user.email)}/${fMId}`
-          ] = {
-            provider: user.email,
-            content: 'Hey I want to be your friend 😎😎😎',
-            date: new Date().toISOString(),
-          };
-
-          db.ref().update(updates);
-        }
-      });
-    } else {
-      return;
+        db.ref().update(updates);
+      }
+    } catch (err) {
+      alert(err);
     }
   };
+
+  // ChatsList Functions:
 
   const onChatSelect = email => {
-    setActiveChat(email);
+    setActiveChat(prev => {
+      if (prev === email) return '';
+      return email;
+    });
+  };
+  // Header Functions
+
+  // TODO: test and debug this function
+
+  const resetChat = email => {
+    // locally
+
+    setUserMessages(prev => {
+      prev[parseEmail(email)].messages = [];
+      return prev;
+    });
+
+    // database
+
+    db.ref(
+      `/users/${parseEmail(user.email)}/chats/${parseEmail(email)}/messages`,
+    ).remove();
+    db.ref(
+      `/users/${parseEmail(email)}/chats/${parseEmail(user.email)}/messages`,
+    ).remove();
   };
 
-  const transformToArr = obj => {
-    const arr = [];
+  const deleteChat = email => {
+    // locally
 
-    for (const [key, value] of Object.entries(obj)) {
-      arr.push({ ...value, id: key });
+    const newChatsEmails = [...chatsEmails];
+    newChatsEmails.splice(newChatsEmails.indexOf(parseEmail(email)), 1);
+
+    setActiveChat('');
+    setChatsEmails(newChatsEmails);
+
+    // database
+    db.ref(
+      `/users/${parseEmail(user.email)}/chats/${parseEmail(email)}`,
+    ).remove();
+    db.ref(
+      `/users/${parseEmail(email)}/chats/${parseEmail(user.email)}`,
+    ).remove();
+  };
+
+  // Message Functions
+
+  const updateActiveChatMessages = () => {
+    db.ref(
+      `/users/${parseEmail(user.email)}/chats/${parseEmail(
+        activeChat,
+      )}/messages`,
+    ).set(userMessages[parseEmail(activeChat)].messages);
+    db.ref(
+      `/users/${parseEmail(activeChat)}/chats/${parseEmail(
+        user.email,
+      )}/messages`,
+    ).set(userMessages[parseEmail(activeChat)].messages);
+  };
+
+  const deleteMessage = id => {
+    // locally
+    const messages = userMessages[parseEmail(activeChat)].messages;
+    const i = messages.findIndex(message => message.id === id);
+    if (messages[i].provider === user.email) {
+      messages.splice(i, 1);
+      setUserMessages();
+      setValue(value => value + 1);
+
+      // database
+
+      updateActiveChatMessages();
     }
+  };
 
-    return arr;
+  const viewMessageInfo = id => {
+    const { date, content, provider } = userMessages[
+      parseEmail(activeChat)
+    ].messages.find(message => message.id === id);
+    alert(`Content: ${content}\nDate: ${date}\nWriter: ${provider}`);
+  };
+
+  // Form Functions
+
+  const addMessage = content => {
+    // locally
+
+    if (content) {
+      setUserMessages(prev => {
+        prev[parseEmail(activeChat)].messages.push({
+          id: uuid(),
+          content,
+          date: new Date().toString(),
+          provider: user.email,
+        });
+
+        return prev;
+      });
+
+      setValue(value => value + 1);
+
+      // database
+
+      updateActiveChatMessages();
+    }
   };
 
   return user ? (
@@ -129,17 +278,24 @@ export default function App() {
         user,
         signOut,
         addChat,
+        chats,
         chatsEmails,
-        parseEmail,
+        userMessages,
+        value,
         activeChat,
         onChatSelect,
-        transformToArr,
+        parseEmail,
+        resetChat,
+        deleteChat,
+        viewMessageInfo,
+        deleteMessage,
+        addMessage,
       }}
     >
-      <div className="app">
+      <Paper elevation={10} className="app">
         <Sidebar />
         <Main />
-      </div>
+      </Paper>
     </Context.Provider>
   ) : (
     <Login onSignIn={signIn} />

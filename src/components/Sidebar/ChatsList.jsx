@@ -1,90 +1,56 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import context from '../../store/context';
 import Chat from './Chat';
-import { db } from '../../firebase';
-import Message from '../Chatting/Message';
 
 export default function ChatsList() {
   const {
     user,
-    chatsEmails,
-    parseEmail,
+    chats,
+    userMessages: messagesObj,
     activeChat,
     onChatSelect,
-    transformToArr,
+    parseEmail,
+    value,
   } = useContext(context);
   const [chatsList, setChatsList] = useState([]);
-  const [lastMessagesInfo, setLastMessagesInfo] = useState([]);
-  const [chatsInfo, setChatsInfo] = useState([]);
 
-  useEffect(async () => {
-    // get chats info from the database
+  // updating chats list with chats change (which is changed by chatsEmails change)
 
-    const newChatsInfo = await Promise.all(
-      chatsEmails.map(async chatEmail => {
-        // getting chatEmail data
-        let info;
+  // FIXME: renders two times when addding a new message
 
-        await db
-          .ref(`users/${parseEmail(chatEmail)}/info`)
-          .once('value', snapshot => {
-            info = snapshot.val();
-          });
-
-        return info;
-      }),
-    );
-
-    // getting lastMessage and lastActive
-    const newMessagesInfo = await Promise.all(
-      chatsEmails.map(async chatEmail => {
-        let lastMessage;
-
-        await db
-          .ref(`users/${parseEmail(chatEmail)}/chats/${parseEmail(user.email)}`)
-          .once('value', snapshot => {
-            if (snapshot.val()) {
-              const messages = transformToArr(snapshot.val());
-              lastMessage = messages[messages.length - 1];
-            }
-          });
-
-        return lastMessage;
-      }),
-    );
-
-    setChatsInfo(newChatsInfo);
-    setLastMessagesInfo(newMessagesInfo);
-  }, [chatsEmails]);
-
-  console.log(lastMessagesInfo, chatsInfo);
+  // FIXME: takes a lot of time to repond to changing activeChat
 
   useEffect(() => {
-    // set chatsList in another useEffect to be able to select chats fast and reduce re-evaluation
-    if (chatsInfo.length !== 0 && lastMessagesInfo.length !== 0) {
+    if (chats) {
       setChatsList(
-        lastMessagesInfo.map((messageInfo, i) => {
-          const { email, name, thumbnail } = chatsInfo[i];
-          const { date, content, provider } = messageInfo;
-
+        chats.map(({ email, name, thumbnail }, i) => {
+          let lastMessage;
+          if (messagesObj[parseEmail(email)]) {
+            const messages = messagesObj[parseEmail(email)].messages;
+            lastMessage = messages[messages.length - 1];
+          }
           return (
             <Chat
               key={i}
               email={email}
               name={name}
               thumbnail={thumbnail}
-              lastActive={date}
+              lastActive={lastMessage?.date || 'none'}
               lastMessage={`${
-                provider === user.email ? `You: ${content}` : content
+                lastMessage?.content
+                  ? lastMessage?.provider === user.email
+                    ? `You: ${lastMessage?.content}`
+                    : lastMessage?.content
+                  : 'The chat is empty'
               }`}
               active={email === activeChat}
-              onSelect={onChatSelect}
+              onSelect={() => onChatSelect(email)}
             />
           );
         }),
       );
     }
-  }, [lastMessagesInfo, chatsInfo, activeChat]);
+  }, [chats, activeChat, value]);
 
   return <div className="chatsList">{chatsList}</div>;
 }

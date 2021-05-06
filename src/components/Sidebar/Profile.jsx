@@ -30,7 +30,12 @@ export default function Profile() {
       </div>
 
       <div className="profile__btns">
-        <IconButton onClick={addChat}>
+        <IconButton
+          onClick={() => {
+            const email = prompt('The Email Adress...');
+            addChat(email);
+          }}
+        >
           <Chat fontSize="large" />
         </IconButton>
         <div className="dropdown__group">
