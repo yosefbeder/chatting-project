@@ -6,7 +6,7 @@ import { IoMdSend as Send } from 'react-icons/io';
 import Picker from 'emoji-picker-react';
 import context from '../../store/context';
 
-export default function Form({ scrollToBottom }) {
+export default function Form() {
   const [isPickerShown, setIsPickerShown] = useState(false);
   const [content, setContent] = useState('');
   const { addMessage } = useContext(context);
@@ -18,7 +18,6 @@ export default function Form({ scrollToBottom }) {
         e.preventDefault();
         addMessage(content);
         setContent('');
-        setTimeout(scrollToBottom, 100);
       }}
     >
       <Picker

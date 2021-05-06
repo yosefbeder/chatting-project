@@ -15,3 +15,7 @@ This is my third react app and I used all of react basic concept with some advan
 - working with async code with react hooks
 - using cleanup functions
 - using webpack (I used to use parcel in my personal project)
+
+## Notes
+
+- the app isn't responsive so I recommend using it on desktop devices of laptops.
