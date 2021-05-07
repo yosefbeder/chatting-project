@@ -27,6 +27,14 @@ export default function App() {
   - send user data to the database if user is new
   */
 
+  useEffect(() => {
+    setIsLoading(true);
+    const userData = JSON.parse(localStorage.getItem('USER_DATA'));
+    if (userData) {
+      setUser(userData);
+    }
+  }, []);
+
   const signIn = async () => {
     try {
       //sign in
@@ -49,12 +57,19 @@ export default function App() {
           thumbnail,
         });
       }
+
+      localStorage.setItem(
+        'USER_DATA',
+        JSON.stringify({ email, name, thumbnail }),
+      );
     } catch (err) {
       setError(err.message);
       setIsLoading(false);
       setTimeout(() => setError(null), 3000);
     }
   };
+
+  // get user data from the local storage if it's existed
 
   /*
   - get chatsEmails and update it whenever something is changed in the database
@@ -106,29 +121,31 @@ export default function App() {
   // get chats and update it
 
   useEffect(() => {
-    (async () => {
-      try {
-        if (chatsEmails.length === 0) setChats([]);
-        else {
-          const newChats = await Promise.all(
-            chatsEmails.map(async chatEmail => {
-              let info;
-              await db
-                .ref(`users/${parseEmail(chatEmail)}/info`)
-                .once('value', snapshot => {
-                  info = snapshot.val();
-                });
-              return info;
-            }),
-          );
+    if (user) {
+      (async () => {
+        try {
+          if (chatsEmails.length === 0) setChats([]);
+          else {
+            const newChats = await Promise.all(
+              chatsEmails.map(async chatEmail => {
+                let info;
+                await db
+                  .ref(`users/${parseEmail(chatEmail)}/info`)
+                  .once('value', snapshot => {
+                    info = snapshot.val();
+                  });
+                return info;
+              }),
+            );
 
-          setChats(newChats);
+            setChats(newChats);
+          }
+        } catch (err) {
+          setError("Couldn't fetch user chats");
         }
-      } catch (err) {
-        setError("Couldn't fetch user chats");
-      }
-      setIsLoading(false);
-    })();
+        setIsLoading(false);
+      })();
+    }
   }, [chatsEmails]);
 
   // Profile Functions:
@@ -140,6 +157,7 @@ export default function App() {
     setUserMessages([]);
     setChatsEmails([]);
     setActiveChat('');
+    localStorage.removeItem('USER_DATA');
   };
 
   const addChat = async email => {
