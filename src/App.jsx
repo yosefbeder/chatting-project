@@ -19,6 +19,8 @@ export default function App() {
   const [userMessages, setUserMessages] = useState({});
   const [activeChat, setActiveChat] = useState('');
   const [value, setValue] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   /*
   - sign in
@@ -26,23 +28,31 @@ export default function App() {
   */
 
   const signIn = async () => {
-    //sign in
+    try {
+      //sign in
+      setIsLoading(true);
 
-    const data = await auth.signInWithPopup(provider);
-    const {
-      isNewUser,
-      profile: { email, name, picture: thumbnail },
-    } = data.additionalUserInfo;
-    setUser({ email, name, thumbnail });
+      const data = await auth.signInWithPopup(provider);
 
-    // sending data to the database
+      const {
+        isNewUser,
+        profile: { email, name, picture: thumbnail },
+      } = data.additionalUserInfo;
+      setUser({ email, name, thumbnail });
 
-    if (isNewUser) {
-      db.ref(`/users/${parseEmail(email)}/info`).set({
-        email,
-        name,
-        thumbnail,
-      });
+      // sending data to the database
+
+      if (isNewUser) {
+        db.ref(`/users/${parseEmail(email)}/info`).set({
+          email,
+          name,
+          thumbnail,
+        });
+      }
+    } catch (err) {
+      setError(err.message);
+      setIsLoading(false);
+      setTimeout(() => setError(null), 3000);
     }
   };
 
@@ -93,28 +103,31 @@ export default function App() {
     };
   }, [user, activeChat, chatsEmails]);
 
-  // TODO: removing database relationship after unmouting
-
   // get chats and update it
 
   useEffect(() => {
     (async () => {
-      if (chatsEmails.length === 0) setChats([]);
-      else {
-        const newChats = await Promise.all(
-          chatsEmails.map(async chatEmail => {
-            let info;
-            await db
-              .ref(`users/${parseEmail(chatEmail)}/info`)
-              .once('value', snapshot => {
-                info = snapshot.val();
-              });
-            return info;
-          }),
-        );
+      try {
+        if (chatsEmails.length === 0) setChats([]);
+        else {
+          const newChats = await Promise.all(
+            chatsEmails.map(async chatEmail => {
+              let info;
+              await db
+                .ref(`users/${parseEmail(chatEmail)}/info`)
+                .once('value', snapshot => {
+                  info = snapshot.val();
+                });
+              return info;
+            }),
+          );
 
-        setChats(newChats);
+          setChats(newChats);
+        }
+      } catch (err) {
+        setError("Couldn't fetch user chats");
       }
+      setIsLoading(false);
     })();
   }, [chatsEmails]);
 
@@ -171,8 +184,6 @@ export default function App() {
     });
   };
   // Header Functions
-
-  // TODO: test and debug this function
 
   const resetChat = email => {
     // locally
@@ -272,7 +283,7 @@ export default function App() {
     }
   };
 
-  return user ? (
+  return user && !isLoading & !error ? (
     <Context.Provider
       value={{
         user,
@@ -298,6 +309,6 @@ export default function App() {
       </Paper>
     </Context.Provider>
   ) : (
-    <Login onSignIn={signIn} />
+    <Login onSignIn={signIn} isLoading={isLoading} error={error} />
   );
 }
