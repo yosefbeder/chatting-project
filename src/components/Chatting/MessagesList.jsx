@@ -1,6 +1,19 @@
 import React, { useContext, useRef, useEffect } from 'react';
 import context from '../../store/context';
 import Message from './Message';
+import { Howl } from 'howler';
+
+import sound_1Src from '../../assets/ES_Mouth Pop 1 - SFX Producer.mp3';
+import sound_2Src from '../../assets/ES_Mouth Pop 2 - SFX Producer.mp3';
+
+const pop_1SoundEffect = new Howl({
+  src: sound_1Src,
+  volume: 0.5,
+});
+const pop_2SoundEffect = new Howl({
+  src: sound_2Src,
+  volume: 0.5,
+});
 
 export default function MessagesList() {
   const { userMessages, activeChat, parseEmail } = useContext(context);
@@ -26,6 +39,11 @@ export default function MessagesList() {
   useEffect(() => {
     if (messagesList.length - 1 === lastMessagesNumber.current) {
       scrollToBottom();
+      if (messages[messages.length - 1].provider === activeChat) {
+        pop_1SoundEffect.play();
+      } else {
+        pop_2SoundEffect.play();
+      }
     }
     lastMessagesNumber.current = messagesList.length;
   }, [messagesList]);

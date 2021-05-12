@@ -32,6 +32,8 @@ export default function App() {
     const userData = JSON.parse(localStorage.getItem('USER_DATA'));
     if (userData) {
       setUser(userData);
+    } else {
+      setIsLoading(false);
     }
   }, []);
 
@@ -104,6 +106,7 @@ export default function App() {
             });
             return messagesObj;
           });
+          setValue(prev => prev + 1);
         } else {
           setActiveChat('');
           setChatsEmails([]);
@@ -176,15 +179,13 @@ export default function App() {
       if (isExisted) {
         const updates = {};
 
-        updates[
-          `/users/${parseEmail(user.email)}/chats/${parseEmail(email)}`
-        ] = { isExisted, messages: [] };
-        updates[
-          `/users/${parseEmail(email)}/chats/${parseEmail(user.email)}`
-        ] = {
-          isExisted,
-          messages: [],
-        };
+        updates[`/users/${parseEmail(user.email)}/chats/${parseEmail(email)}`] =
+          { isExisted, messages: [] };
+        updates[`/users/${parseEmail(email)}/chats/${parseEmail(user.email)}`] =
+          {
+            isExisted,
+            messages: [],
+          };
 
         db.ref().update(updates);
       }

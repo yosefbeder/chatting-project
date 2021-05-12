@@ -1,5 +1,19 @@
 import React from 'react';
 import Avatar from '../UI/Avatar';
+import CardActionArea from '@material-ui/core/CardActionArea';
+import { makeStyles } from '@material-ui/core/styles';
+
+const useStyles = makeStyles({
+  chat: {
+    display: 'flex',
+    padding: '8px',
+    alignItems: 'center',
+    gap: '.5rem',
+  },
+  active: {
+    backgroundColor: 'var(--color-lightGrey)',
+  },
+});
 
 export default function Chat({
   email,
@@ -18,9 +32,11 @@ export default function Chat({
       ? Intl.DateTimeFormat('en-us').format(new Date(lastActive))
       : 'none';
 
+  const classes = useStyles();
+
   return (
-    <div
-      className={`chat ${active && 'active'}`}
+    <CardActionArea
+      className={`${classes.chat} ${active && classes.active}`}
       onClick={() => onSelect(email)}
     >
       <Avatar src={thumbnail} size="big" />
@@ -34,6 +50,6 @@ export default function Chat({
           <div className="u-shadded-text u-vSmall-text">{mLastActive}</div>
         </div>
       </div>
-    </div>
+    </CardActionArea>
   );
 }

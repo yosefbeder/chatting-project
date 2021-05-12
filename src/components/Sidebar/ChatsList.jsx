@@ -16,10 +16,6 @@ export default function ChatsList() {
 
   // updating chats list with chats change (which is changed by chatsEmails change)
 
-  // FIXME: renders two times when addding a new message
-
-  // FIXME: takes a lot of time to repond to changing activeChat
-
   useEffect(() => {
     if (chats) {
       setChatsList(
