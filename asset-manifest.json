@@ -1,0 +1,22 @@
+{
+  "files": {
+    "main.css": "/whatsapp-clone/static/css/main.b8032a1c.chunk.css",
+    "main.js": "/whatsapp-clone/static/js/main.24a353f0.chunk.js",
+    "main.js.map": "/whatsapp-clone/static/js/main.24a353f0.chunk.js.map",
+    "runtime-main.js": "/whatsapp-clone/static/js/runtime-main.4f8cb496.js",
+    "runtime-main.js.map": "/whatsapp-clone/static/js/runtime-main.4f8cb496.js.map",
+    "static/js/2.c06be16c.chunk.js": "/whatsapp-clone/static/js/2.c06be16c.chunk.js",
+    "static/js/2.c06be16c.chunk.js.map": "/whatsapp-clone/static/js/2.c06be16c.chunk.js.map",
+    "index.html": "/whatsapp-clone/index.html",
+    "static/css/main.b8032a1c.chunk.css.map": "/whatsapp-clone/static/css/main.b8032a1c.chunk.css.map",
+    "static/js/2.c06be16c.chunk.js.LICENSE.txt": "/whatsapp-clone/static/js/2.c06be16c.chunk.js.LICENSE.txt",
+    "static/media/ES_Mouth Pop 1 - SFX Producer.d4f98ffd.mp3": "/whatsapp-clone/static/media/ES_Mouth Pop 1 - SFX Producer.d4f98ffd.mp3",
+    "static/media/ES_Mouth Pop 2 - SFX Producer.a92926d3.mp3": "/whatsapp-clone/static/media/ES_Mouth Pop 2 - SFX Producer.a92926d3.mp3"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.4f8cb496.js",
+    "static/js/2.c06be16c.chunk.js",
+    "static/css/main.b8032a1c.chunk.css",
+    "static/js/main.24a353f0.chunk.js"
+  ]
+}
